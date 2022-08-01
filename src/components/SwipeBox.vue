@@ -6,9 +6,12 @@
 
 <script>
 export default {
-  name: 'SwipBox',
+  name: 'SwipeBox',
   props: {
     tes: String,
+    speed: {
+      default: 100,
+    },
   },
   data: function () {
     return {
@@ -18,6 +21,7 @@ export default {
         mainpos: 0,
         stpx: 0,
         numx: 0,
+        swdirection: 'ltr',
 
         mousedown: false,
       },
@@ -27,13 +31,16 @@ export default {
   methods: {
     doSwip: function (anim) {
       this.$emit('onChange', this.selfSwC.stpx);
-      var allelems = this.mainEl.getElementsByTagName('*');
 
+      console.log(this.swdirection);
 
-     var xpos = 0;
-      if (typeof allelems[this.selfSwC.stpx] != "undefined" && typeof allelems[this.selfSwC.stpx].offsetLeft != "undefined") {
-        xpos = allelems[this.selfSwC.stpx].offsetLeft;
-      } 
+      var xpos = 0;
+      if (
+        typeof this.mainEl.children[this.selfSwC.stpx] != 'undefined' &&
+        typeof this.mainEl.children[this.selfSwC.stpx].offsetLeft != 'undefined'
+      ) {
+        xpos = this.mainEl.children[this.selfSwC.stpx].offsetLeft;
+      }
 
       var maincntx = this;
       if (anim == true) {
@@ -43,7 +50,7 @@ export default {
           },
           maincntx.mainEl.scrollLeft,
           xpos,
-          50,
+          maincntx.speed,
           function (x) {
             return x;
           }
@@ -55,16 +62,13 @@ export default {
       this.selfSwC.mainpos = -1 * xpos;
     },
 
-    swiptoLeft: function () {
-      if (
-        this.selfSwC.stpx <
-        this.mainEl.getElementsByTagName('*').length - 1
-      ) {
+    swiptoNext: function () {
+      if (this.selfSwC.stpx < this.mainEl.childElementCount - 1) {
         this.selfSwC.stpx++;
         this.doSwip(true);
       }
     },
-    swiptoRight: function () {
+    swiptoPrevious: function () {
       if (this.selfSwC.stpx > 0) {
         this.selfSwC.stpx--;
         this.doSwip(true);
@@ -72,7 +76,7 @@ export default {
     },
 
     goTo: function (id) {
-      if (id >= 0 && id < this.mainEl.getElementsByTagName('*').length) {
+      if (id >= 0 && id < this.mainEl.childElementCount) {
         this.selfSwC.stpx = id;
         this.doSwip(true);
       }
@@ -101,14 +105,14 @@ export default {
     },
 
     swiping: function (e) {
+      var dif = 0;
       if (this.selfSwC.mousedown) {
         e.preventDefault();
         e.stopPropagation();
-        var dif = 0;
         if (typeof e.changedTouches !== 'undefined') {
-           dif = e.changedTouches[0].pageX - this.selfSwC.start;
+          dif = e.changedTouches[0].pageX - this.selfSwC.start;
         } else {
-           dif = e.pageX - this.selfSwC.start;
+          dif = e.pageX - this.selfSwC.start;
         }
 
         this.mainEl.scrollLeft = -1 * (this.selfSwC.mainpos + dif);
@@ -116,14 +120,14 @@ export default {
     },
 
     swipingtouch: function (e) {
-    var dif = 0;
+      var dif = 0;
       if (this.selfSwC.mousedown) {
         // e.preventDefault();
         e.stopPropagation();
         if (typeof e.changedTouches !== 'undefined') {
-           dif = e.changedTouches[0].pageX - this.selfSwC.start;
+          dif = e.changedTouches[0].pageX - this.selfSwC.start;
         } else {
-           dif = e.pageX - this.selfSwC.start;
+          dif = e.pageX - this.selfSwC.start;
         }
 
         this.mainEl.scrollLeft = -1 * (this.selfSwC.mainpos + dif);
@@ -131,20 +135,28 @@ export default {
     },
 
     swipEnd: function (e) {
-      this.selfSwC.mousedown = false;
       var dif = 0;
+      this.selfSwC.mousedown = false;
       if (typeof e.changedTouches !== 'undefined') {
-         dif = e.changedTouches[0].pageX - this.selfSwC.start;
+        dif = e.changedTouches[0].pageX - this.selfSwC.start;
       } else {
-         dif = e.pageX - this.selfSwC.start;
+        dif = e.pageX - this.selfSwC.start;
       }
 
       this.selfSwC.mainpos = this.selfSwC.mainpos + dif;
 
       if (dif < 0) {
-        this.swiptoLeft();
+        if (this.swdirection == 'ltr') {
+          this.swiptoNext();
+        } else {
+          this.swiptoPrevious();
+        }
       } else if (dif > 0) {
-        this.swiptoRight();
+        if (this.swdirection == 'rtl') {
+          this.swiptoNext();
+        } else {
+          this.swiptoPrevious();
+        }
       } else if (dif == 0) {
         if (typeof this.selfSwC.onClick !== 'undefined') {
           //this.selfSwC.onClick(this.selfSwC.numx, fields.items[this.selfSwC.numx]);
@@ -159,7 +171,16 @@ export default {
     },
 
     rendersw: function () {
-      var mainsw = this.$refs.mainswiper.getElementsByTagName('*')[0];
+      var mainsw = this.$refs.mainswiper.firstElementChild;
+
+      if (
+        window.getComputedStyle(mainsw, null).getPropertyValue('direction') ==
+        'rtl'
+      ) {
+        this.swdirection = 'rtl';
+      } else {
+        this.swdirection = 'ltr';
+      }
 
       mainsw.style.position = 'relative';
       mainsw.style.display = 'flex';
@@ -170,19 +191,15 @@ export default {
         navigator.msMaxTouchPoints > 0
       ) {
         mainsw.style.overflow = 'scroll';
-       
       } else {
-       
         mainsw.style.overflow = 'hidden';
       }
 
       this.mainEl = mainsw;
 
-      var allel = this.mainEl.getElementsByTagName('*');
-
-      for (var i = 0; i < allel.length; i++) {
-        allel[i].style.boxSizing = 'border-box';
-        allel[i].style.minWidth = '100%';
+      for (var i = 0; i < mainsw.childElementCount; i++) {
+        mainsw.children[i].style.boxSizing = 'border-box';
+        mainsw.children[i].style.minWidth = '100%';
       }
 
       mainsw.removeEventListener('mousedown', this.swipStart, true);
@@ -202,8 +219,8 @@ export default {
       mainsw.addEventListener('touchmove', this.swipingtouch, true);
       mainsw.addEventListener('touchend', this.swipEnd, true);
 
-      if (allel.length - 1 < this.selfSwC.stpx) {
-        this.goTo(allel.length - 1);
+      if (mainsw.childElementCount - 1 < this.selfSwC.stpx) {
+        this.goTo(mainsw.childElementCount - 1);
       }
     },
   },
