@@ -189,7 +189,7 @@ export default {
       mainsw.style.position = 'relative';
       mainsw.style.display = 'flex';
 
-      if (
+      /*if (
         'ontouchstart' in window ||
         navigator.maxTouchPoints > 0 ||
         navigator.msMaxTouchPoints > 0
@@ -198,6 +198,9 @@ export default {
       } else {
         mainsw.style.overflow = 'hidden';
       }
+      */
+      
+      mainsw.style.overflow = 'hidden';
 
       this.mainEl = mainsw;
 
