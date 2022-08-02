@@ -32,7 +32,7 @@ export default {
     doSwip: function (anim) {
       this.$emit('onChange', this.selfSwC.stpx);
 
-      console.log(this.swdirection);
+      
 
       var xpos = 0;
       if (
@@ -62,16 +62,20 @@ export default {
       this.selfSwC.mainpos = -1 * xpos;
     },
 
-    swiptoNext: function () {
+    swipetoNext: function () {
       if (this.selfSwC.stpx < this.mainEl.childElementCount - 1) {
         this.selfSwC.stpx++;
         this.doSwip(true);
+      } else {
+        this.selfSwC.mainpos = this.mainEl.children[this.selfSwC.stpx].offsetLeft*-1;
       }
     },
-    swiptoPrevious: function () {
+    swipetoPrevious: function () {
       if (this.selfSwC.stpx > 0) {
         this.selfSwC.stpx--;
         this.doSwip(true);
+      } else {
+        this.selfSwC.mainpos = 0;
       }
     },
 
@@ -147,15 +151,15 @@ export default {
 
       if (dif < 0) {
         if (this.swdirection == 'ltr') {
-          this.swiptoNext();
+          this.swipetoNext();
         } else {
-          this.swiptoPrevious();
+          this.swipetoPrevious();
         }
       } else if (dif > 0) {
         if (this.swdirection == 'rtl') {
-          this.swiptoNext();
+          this.swipetoNext();
         } else {
-          this.swiptoPrevious();
+          this.swipetoPrevious();
         }
       } else if (dif == 0) {
         if (typeof this.selfSwC.onClick !== 'undefined') {
@@ -239,12 +243,13 @@ export default {
   },
 };
 </script>
+
 <style>
-.mainswiperc:first-child ::-webkit-scrollbar {
+.mainswiperc > *::-webkit-scrollbar {
   display: none;
 }
 
-.mainswiperc:first-child {
+.mainswiperc > * {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
